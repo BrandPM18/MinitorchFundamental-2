@@ -23,9 +23,11 @@ def index_to_position(index, strides):
     Returns:
         int : position in storage
     """
-
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    position = 0
+    for i, stride in zip(index, strides):
+        value = i * stride
+        position = position + value
+    return position
 
 
 def count(position, shape, out_index):
@@ -44,8 +46,11 @@ def count(position, shape, out_index):
       None : Fills in `out_index`.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    cur_pos = position + 0
+    for i in range(len(shape) - 1, -1, -1):
+        sh = shape[i]
+        out_index[i] = int(cur_pos % sh)
+        cur_pos = cur_pos // sh
 
 
 def broadcast_index(big_index, big_shape, shape, out_index):
@@ -65,9 +70,12 @@ def broadcast_index(big_index, big_shape, shape, out_index):
     Returns:
         None : Fills in `out_index`.
     """
-    # TODO: Implement for Task 2.4.
-    raise NotImplementedError('Need to implement for Task 2.4')
-
+    for i, s in enumerate(shape):
+        if s > 1:
+            out_index[i] = big_index[i + (len(big_shape) - len(shape))]
+        else:
+            out_index[i] = 0
+    return None
 
 def shape_broadcast(shape1, shape2):
     """
@@ -83,9 +91,24 @@ def shape_broadcast(shape1, shape2):
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.4.
-    raise NotImplementedError('Need to implement for Task 2.4')
-
+    a, b = shape1, shape2
+    m = max(len(a), len(b))
+    # print("m",m)
+    c_rev = [0] * m
+    a_rev = list(reversed(a))
+    b_rev = list(reversed(b))
+    for i in range(m):
+        if i >= len(a):
+            c_rev[i] = b_rev[i]
+        elif i >= len(b):
+            c_rev[i] = a_rev[i]
+        else:
+            c_rev[i] = max(a_rev[i], b_rev[i])
+            if a_rev[i] != c_rev[i] and a_rev[i] != 1:
+                raise IndexingError("Broadcast failure")
+            if b_rev[i] != c_rev[i] and b_rev[i] != 1:
+                raise IndexingError("Broadcast failure")
+    return tuple(reversed(c_rev))
 
 def strides_from_shape(shape):
     layout = [1]
@@ -190,9 +213,14 @@ class TensorData:
         assert list(sorted(order)) == list(
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
-
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError('Need to implement for Task 2.1')
+        new_shape = []
+        new_stride = []
+        for i in range(len(order)):
+            new_shape.append(self._shape[order[i]])
+            new_stride.append(self._strides[order[i]])
+        new_shape = tuple(new_shape)
+        new_stride = tuple(new_stride)
+        return TensorData(self._storage, new_shape, new_stride)
 
     def to_string(self):
         s = ""
